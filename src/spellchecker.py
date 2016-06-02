@@ -28,15 +28,17 @@ class spellchecker:
                          u'\u057D', u'\u057E', u'\u057F', u'\u0580',
                          u'\u0581', u'\u0582', u'\u0583', u'\u0584',
                          u'\u0585', u'\u0586', u'\u0587']
-        self.NWORDS = collections.defaultdict(int)
+        self.NWORDS = collections.defaultdict(lambda: 1)
 
     def train(self, dict_file):
         # Read in words and their counts
-        with open(dict_file, 'r') as f:
-            for line in f:
-                if line:
-                    count, word = line.split()
-                    self.NWORDS[word] += 1
+        f = codecs.open(dict_file, encoding='utf-8')
+        f.seek(0)
+        for line in f:
+            if line:
+                count, word = line.split()
+                self.NWORDS[word] += 1
+        f.close()
 
     def edits1(self, word):
         splits     = [(word[:i], word[i:]) for i in range(len(word) + 1)]
@@ -53,8 +55,11 @@ class spellchecker:
 
     def correct(self, word):
         word = word.decode('utf-8');
-        candidates = self.known([word]) or self.known(self.edits1(word)) or self.known_edits2(word) or [word]
-        return max(candidates, key=self.NWORDS.get)
+        candidates = self.known([word]) or self.known(self.edits1(word)) or self.known_edits2(word)
+        if candidates:
+            return max(candidates, key=self.NWORDS.get)
+        else:
+            return None
 
     def correctMatch(self, match):
         return self.correct(match.group().encode('utf-8'))
@@ -67,5 +72,7 @@ class spellchecker:
 
 if __name__ == "__main__":
     pass
-    #sp = spellchecker();
-    #printU(sp.correctText('դժղոխքի: աղղմկում'))
+    #sp = spellchecker()
+    #sp.train('words.txt')
+    #print len(sp.NWORDS)
+    #print sp.correct('առաջչն')

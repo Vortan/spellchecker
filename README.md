@@ -2,10 +2,13 @@
 
 ``` bash
 cd src/
+# produce dictionary
+python collector.py .../corpus/ > words.txt
+# train and use spellchecker
 python
->>> import spellchecker
->>> sp = spellchecker.spellchecker()
->>> sp.train(open('files.txt'))
+>>> from spellchecker import *
+>>> sp = spellchecker()
+>>> sp.train('words.txt')
 >>> print sp.correct('առաջչն')
 ```
 

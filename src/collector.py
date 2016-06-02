@@ -77,6 +77,7 @@ def main():
         text = removePunc(text)
         text = text.lower()
         words += getWords(text)
+        f.close()
     NWORDS = makeDict(words)
     printDict(NWORDS)
 
