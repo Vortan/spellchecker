@@ -1,0 +1,3 @@
+src/*.txt
+.DS_STORE
+*.pyc
