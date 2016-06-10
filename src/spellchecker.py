@@ -1,17 +1,20 @@
 #!/usr/bin/python
 # This Python file uses the following encoding: utf-8
-import re, collections, unicodedata, codecs, operator, os
+'''
+Armenian spellchecker based on http://norvig.com/spell-correct.html
+'''
+
+import re, collections, unicodedata, codecs, operator, os, time
 
 ''' Helpers '''
 
 # Print unicode string
 def printU(text):
-  print text.encode('utf-8');
+  print text.encode('utf-8')
 
 # Print array of unicode strings
 def printUs(texts):
-  for s in texts:
-    print s.encode('utf-8');
+    print [s.encode('utf-8') for s in texts]
 
 ''' Spellchecker '''
 
@@ -37,7 +40,7 @@ class spellchecker:
         for line in f:
             if line:
                 count, word = line.split()
-                self.NWORDS[word] += 1
+                self.NWORDS[word] = int(count)
         f.close()
 
     def edits1(self, word):
@@ -54,25 +57,45 @@ class spellchecker:
     def known(self, words): return set(w for w in words if w in self.NWORDS)
 
     def correct(self, word):
-        word = word.decode('utf-8');
-        candidates = self.known([word]) or self.known(self.edits1(word)) or self.known_edits2(word)
-        if candidates:
-            return max(candidates, key=self.NWORDS.get)
-        else:
-            return None
+        #word = word.decode('utf-8');
+        candidates = self.known([word]) | self.known(self.edits1(word)) | self.known_edits2(word)
+        return max(candidates, key=self.NWORDS.get)
 
+    '''
     def correctMatch(self, match):
         return self.correct(match.group().encode('utf-8'))
 
     def correctText(self, text):
         text = text.decode('utf-8');
         return re.sub(self.armenian, self.correctMatch, text);
+    '''
+
+    def spelltest(self, tests, bias=None, verbose=True):
+        n, bad, unknown, start = 0, 0, 0, time.clock()
+        if bias:
+            for target in tests: self.NWORDS[target] += bias
+        for target,wrongs in tests.items():
+            for wrong in wrongs.split():
+                n += 1
+                w = self.correct(wrong)
+                if w != target:
+                    bad += 1
+                    unknown += (target not in self.NWORDS)
+                    if verbose:
+                        print '%s => %s (%d); expected %s (%d)' % (
+                            wrong.encode('utf-8'), w.encode('utf-8'),
+                             self.NWORDS[w], target.encode('utf-8'),
+                              self.NWORDS[target])
+        return dict(bad=bad, n=n, bias=bias, perc=int(100. - 100.*bad/n),
+                    unknown=unknown, secs=int(time.clock()-start) )
 
 ''' Main '''
 
 if __name__ == "__main__":
     pass
-    #sp = spellchecker()
-    #sp.train('words.txt')
-    #print len(sp.NWORDS)
-    #print sp.correct('առաջչն')
+    '''
+    sp = spellchecker()
+    sp.train('words.txt')
+    word = 'պտտական'.decode('utf-8')
+    print sp.correct(word)
+    '''

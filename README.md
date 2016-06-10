@@ -9,7 +9,15 @@ python
 >>> from spellchecker import *
 >>> sp = spellchecker()
 >>> sp.train('words.txt')
->>> print sp.correct('առաջչն')
+>>> word = 'առաջչն'.decode('utf-8')
+>>> print sp.correct(word)
+```
+
+## Test
+
+``` bash
+cd test/
+python test.py ../src/words.txt ./tests/test1.json
 ```
 
 ## Relevant Links

@@ -50,7 +50,7 @@ def printDict(dict):
     for k,v in s_list:
         print '%7d\t%s' % (v, k.encode('utf-8'))
 
-def main():
+if __name__ == "__main__":
     # Get directory
     if len(sys.argv) == 2:
         path = sys.argv[1]
@@ -80,6 +80,3 @@ def main():
         f.close()
     NWORDS = makeDict(words)
     printDict(NWORDS)
-
-if __name__ == "__main__":
-    main()
