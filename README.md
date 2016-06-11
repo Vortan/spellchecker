@@ -10,7 +10,7 @@ python
 >>> sp = spellchecker()
 >>> sp.train('words.txt')
 >>> word = 'առաջչն'.decode('utf-8')
->>> print sp.correct(word)
+>>> printUs(sp.correct(word))
 ```
 
 ## Test

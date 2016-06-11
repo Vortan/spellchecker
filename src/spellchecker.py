@@ -4,17 +4,15 @@
 Armenian spellchecker based on http://norvig.com/spell-correct.html
 '''
 
-import re, collections, unicodedata, codecs, operator, os, time
+import re, collections, unicodedata, codecs, operator, os, time, heapq
 
 ''' Helpers '''
 
-# Print unicode string
-def printU(text):
-  print text.encode('utf-8')
+def printUs(words):
+    print (',').join(words)
 
 # Print array of unicode strings
-def printUs(texts):
-    print [s.encode('utf-8') for s in texts]
+
 
 ''' Spellchecker '''
 
@@ -56,10 +54,10 @@ class spellchecker:
 
     def known(self, words): return set(w for w in words if w in self.NWORDS)
 
-    def correct(self, word):
+    def correct(self, word, n=1):
         #word = word.decode('utf-8');
         candidates = self.known([word]) | self.known(self.edits1(word)) | self.known_edits2(word)
-        return max(candidates, key=self.NWORDS.get)
+        return heapq.nlargest(n, candidates, key=self.NWORDS.get)
 
     '''
     def correctMatch(self, match):
@@ -70,24 +68,24 @@ class spellchecker:
         return re.sub(self.armenian, self.correctMatch, text);
     '''
 
-    def spelltest(self, tests, bias=None, verbose=True):
+    def spelltest(self, tests, k=1, bias=None, verbose=True):
         n, bad, unknown, start = 0, 0, 0, time.clock()
         if bias:
             for target in tests: self.NWORDS[target] += bias
         for target,wrongs in tests.items():
             for wrong in wrongs.split():
                 n += 1
-                w = self.correct(wrong)
-                if w != target:
+                ws = self.correct(wrong, k)
+                if target not in ws:
                     bad += 1
                     unknown += (target not in self.NWORDS)
                     if verbose:
-                        print '%s => %s (%d); expected %s (%d)' % (
-                            wrong.encode('utf-8'), w.encode('utf-8'),
-                             self.NWORDS[w], target.encode('utf-8'),
+                        print '%s => %s (%s); expected %s (%d)' % (
+                            wrong.encode('utf-8'), (',').join(ws).encode('utf-8'),
+                             (',').join([str(self.NWORDS[w]) for w in ws]), target.encode('utf-8'),
                               self.NWORDS[target])
         return dict(bad=bad, n=n, bias=bias, perc=int(100. - 100.*bad/n),
-                    unknown=unknown, secs=int(time.clock()-start) )
+                    unknown=unknown, secs=int(time.clock()-start))
 
 ''' Main '''
 

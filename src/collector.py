@@ -57,6 +57,7 @@ if __name__ == "__main__":
     else:
         print "Usage: ./collector.py <dir>"
         print "Example: ./collector.py books/*.txt"
+        sys.exit()
 
     logfile = open("log_%s.txt" % time.time(), 'w+')
 
