@@ -17,7 +17,7 @@ python
 
 ``` bash
 cd test/
-python test.py ../src/words.txt ./tests/test1.json
+python test.py ../src/words.txt ./tests/rubina.json 3 1000 100 1
 ```
 
 ## Relevant Links
