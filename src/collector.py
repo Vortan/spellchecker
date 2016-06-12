@@ -2,6 +2,11 @@
 # This Python file uses the following encoding: utf-8
 import sys, os, re, unicodedata, codecs, operator, collections, time
 
+def printProgress(i, total):
+    sys.stderr.write('\r')
+    sys.stderr.write("Progress: {0:.1f}%".format(i/float(total) * 100))
+    sys.stderr.flush()
+
 def getWords(text):
     '''
     Match all armenian words
@@ -69,7 +74,7 @@ if __name__ == "__main__":
         print "Example: ./collector.py books/*.txt"
         sys.exit()
 
-    logfile = open("log_%s.txt" % time.time(), 'w+')
+    #logfile = open("log_%s.txt" % time.time(), 'w+')
 
     # Collect words
     words = []
@@ -79,8 +84,9 @@ if __name__ == "__main__":
     for dirpath, dirnames, files in os.walk(path)
     for f in files if f.endswith('.txt')]
 
-    for filename in files:
-        logfile.write(filename + "\n")
+    for i, filename in enumerate(files):
+        #logfile.write(filename + "\n")
+        printProgress(i, len(files))
         f = codecs.open(filename, encoding='utf-8')
         f.seek(0)
         text = f.read()
