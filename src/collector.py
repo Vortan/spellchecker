@@ -16,17 +16,27 @@ def removePunc(text):
     '''
     Remove puncation
     pattern: All Armenian punctuation
-    055E - QUESTION MARK    055C - EXCLAMATION MARK
-    058A - HYPHEN           055B - EMPHASIS MARK
+
+    0559 - ARMENIAN MODIFIER LETTER LEFT HALF RING
+    055A - ARMENIAN APOSTROPHE
+    055B - ARMENIAN EMPHASIS MARK
+    055C - ARMENIAN EXCLAMATION MARK
+    055D - ARMENIAN COMMA
+    055E - ARMENIAN QUESTION MARK
+    055F - ARMENIAN ABBREVIATION MARK
+    0589 - ARMENIAN FULL STOP
+    058A - ARMENIAN HYPHEN
+    00AB - LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+    00BB - RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
     '''
-    pattern = ur'[\u055E\u055C\u058A\u055B]'
+    pattern = ur'[\0559\055A\055B\055C\055E\055F\0589\058A\00AB\00BB]'
     punctuation = re.compile(pattern, re.UNICODE)
     return re.sub(punctuation, '', text)
 
 def removeProper(text):
     '''
-    Remove all words that are capital and not after punctuation
-    pattern: Capitalized armenian word not after punctuation
+    Remove all words that are capital and not after fullstop punctuation
+    pattern: Capitalized armenian word not after fullstop punctuation
     '''
     pattern = ur'((?<![^―:։—\n\r․…–])\s[\u0531-\u0556][\u0561-\u0587]+)'
     proper_word = re.compile(pattern, re.UNICODE)
