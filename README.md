@@ -2,7 +2,7 @@
 
 ``` bash
 cd src/
-# produce dictionary
+# produce dictionary (make sure you have a corpus directory)
 python collector.py .../corpus/ > words.txt
 # train and use spellchecker
 python
