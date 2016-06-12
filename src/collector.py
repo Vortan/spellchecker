@@ -97,3 +97,4 @@ if __name__ == "__main__":
         f.close()
     NWORDS = makeDict(words)
     printDict(NWORDS)
+    sys.stderr.write("\ndone\n")
