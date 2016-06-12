@@ -11,8 +11,13 @@ import re, collections, unicodedata, codecs, operator, os, time, heapq
 def printUs(words):
     print (',').join(words)
 
-# Print array of unicode strings
+def getSecond(x):
+    if x and len(x) >= 2:
+        return x[1]
 
+def getFirst(x):
+    if x and len(x) >= 1:
+        return x[0]
 
 ''' Spellchecker '''
 
@@ -54,36 +59,47 @@ class spellchecker:
 
     def known(self, words): return set(w for w in words if w in self.NWORDS)
 
-    def correct(self, word, n=1):
+    def correctSimple(self, word, n=1):
         #word = word.decode('utf-8');
         candidates = self.known([word]) | self.known(self.edits1(word)) | self.known_edits2(word)
         return heapq.nlargest(n, candidates, key=self.NWORDS.get)
 
-    '''
-    def correctMatch(self, match):
-        return self.correct(match.group().encode('utf-8'))
+    def correct(self, word, k=1, m0=1, m1=1, m2=1):
+        '''
+        word: mispelled word
+        n:    number of corrections returned
+        m0:   weight of edit0 distance
+        m1:   weight of edit1 distance
+        m2:   weight of edit2 distance
+        '''
+        edit0 = set(filter(None, [self.addFreq(word, m0)]))
+        edit1 = set(filter(None, [self.addFreq(w, m1) for w in self.known(self.edits1(word))]))
+        edit2 = set(filter(None, [self.addFreq(w, m2) for w in self.known_edits2(word)]))
+        candidates = edit0 | edit1 | edit2
+        return [getFirst(x) for x in heapq.nlargest(k, candidates, key=getSecond)]
 
-    def correctText(self, text):
-        text = text.decode('utf-8');
-        return re.sub(self.armenian, self.correctMatch, text);
-    '''
+    def addFreq(self, word, m=1):
+        if word in self.NWORDS:
+            return (word, self.NWORDS[word]*m)
 
-    def spelltest(self, tests, k=1, bias=None, verbose=True):
+    def spelltest(self, tests, k=1, m0=1, m1=1, m2=1, bias=None, verbose=True):
         n, bad, unknown, start = 0, 0, 0, time.clock()
         if bias:
             for target in tests: self.NWORDS[target] += bias
         for target,wrongs in tests.items():
             for wrong in wrongs.split():
                 n += 1
-                ws = self.correct(wrong, k)
+                ws = self.correct(wrong, k, m0, m1, m2)
                 if target not in ws:
                     bad += 1
                     unknown += (target not in self.NWORDS)
                     if verbose:
-                        print '%s => %s (%s); expected %s (%d)' % (
-                            wrong.encode('utf-8'), (',').join(ws).encode('utf-8'),
-                             (',').join([str(self.NWORDS[w]) for w in ws]), target.encode('utf-8'),
-                              self.NWORDS[target])
+                        print '%03d] %s => %s (%s); expected %s (%d)' % (
+                            bad, wrong.encode('utf-8'),
+                            (',').join(ws).encode('utf-8'),
+                            (',').join([str(self.NWORDS[w]) for w in ws]),
+                            target.encode('utf-8'),
+                            self.NWORDS[target])
         return dict(bad=bad, n=n, bias=bias, perc=int(100. - 100.*bad/n),
                     unknown=unknown, secs=int(time.clock()-start))
 
@@ -92,8 +108,9 @@ class spellchecker:
 if __name__ == "__main__":
     pass
     '''
+    from spellchecker import *
     sp = spellchecker()
     sp.train('words.txt')
-    word = 'պտտական'.decode('utf-8')
-    print sp.correct(word)
+    word = 'առաջչն'.decode('utf-8')
+    printUs(sp.correct(word))
     '''
