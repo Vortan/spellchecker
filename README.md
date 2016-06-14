@@ -20,15 +20,6 @@ cd test/
 python test.py ../src/words.txt ./tests/rubina.json 3 1000 100 1
 ```
 
-## Relevant Links
-
-Code based on
-http://norvig.com/spell-correct.html
-
-Corpus Sources
-http://www.eanc.net/
-http://www.digilib.am/
-
 ## Armenian Spell Checker
 
 #### Introduction
@@ -70,7 +61,28 @@ The second issue is the fact that although Armenian versions of most words might
 
 It is clear that the main method of communication right now and in the future is the internet. It is also clear that the amount of Armenian online is currently lacking. This needs to be fixed, and the best way to do it is to give people the confidence and accessibility that they need to make their voices read.
 
-#### Credits
+## Armenian spelling
+
+Rubina Nazaryan's "Մայրենի Բոլորի Համար" considers these letters tricky in spelling.
+
+* Է - Ե
+* Օ - Ո
+* Ը
+* Բ - Պ - Փ
+* Գ - Կ - Ք
+* Դ - Տ - Թ
+* Ձ - Ծ - Ց
+* Ջ - Ճ - Չ
+* Ղ - Խ
+* Ր - Ռ
+* Հ
+* Վ - Ֆ
+* Ն - Մ
+* Զ - Ս
+* Ժ - Շ
+
+
+## Credits
 
 Thanks to:
 * Vahakn
