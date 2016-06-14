@@ -63,7 +63,7 @@ It is clear that the main method of communication right now and in the future is
 
 ## Armenian spelling
 
-Rubina Nazaryan's "Մայրենի Բոլորի Համար" considers these letters tricky in spelling.
+Rubina Nazaryan's "Մայրենի Բոլորի Համար" considers these letters tricky in Armenian spelling.
 
 * Է - Ե
 * Օ - Ո
