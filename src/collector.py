@@ -67,11 +67,12 @@ def printDict(dict):
 
 if __name__ == "__main__":
     # Get directory
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 3:
         path = sys.argv[1]
+        ext = sys.argv[2]
     else:
-        print "Usage: ./collector.py <dir>"
-        print "Example: ./collector.py books/*.txt"
+        print "Usage: ./collector.py <dir> <extention>"
+        print "Example: ./collector.py .../corpus/ txt"
         sys.exit()
 
     #logfile = open("log_%s.txt" % time.time(), 'w+')
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     # get all .txt file paths recursively
     files = [os.path.join(dirpath, f)
     for dirpath, dirnames, files in os.walk(path)
-    for f in files if f.endswith('.txt')]
+    for f in files if f.endswith('.' + ext)]
 
     for i, filename in enumerate(files):
         #logfile.write(filename + "\n")
