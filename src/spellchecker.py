@@ -4,7 +4,7 @@
 Armenian spellchecker based on http://norvig.com/spell-correct.html
 '''
 
-import re, collections, unicodedata, codecs, operator, os, time, heapq
+import re, collections, unicodedata, codecs, operator, os, time, heapq, termcolor
 
 ''' Helpers '''
 
@@ -36,14 +36,22 @@ class spellchecker:
                          u'\u0585', u'\u0586', u'\u0587']
         self.NWORDS = collections.defaultdict(lambda: 1)
 
+    def printDict(self):
+        '''
+        Sort and print unicode dictionary
+        '''
+        s_list = sorted(self.NWORDS.items(), key=operator.itemgetter(1))
+        for k,v in s_list:
+            print '%7d\t%s' % (v, k.encode('utf-8'))
+
     def train(self, dict_file):
         # Read in words and their counts
         f = codecs.open(dict_file, encoding='utf-8')
         f.seek(0)
         for line in f:
             if line:
-                count, word = line.split()
-                self.NWORDS[word] = int(count)
+                word = line.strip()
+                self.NWORDS[word] += 1
         f.close()
 
     def edits1(self, word):
@@ -94,12 +102,15 @@ class spellchecker:
                     bad += 1
                     unknown += (target not in self.NWORDS)
                     if verbose:
-                        print '%03d] %s => %s (%s); expected %s (%d)' % (
-                            bad, wrong.encode('utf-8'),
+                        print termcolor.colored(
+                            '%s => %s (%s); expected %s (%d)' % (
+                            wrong.encode('utf-8'),
                             (',').join(ws).encode('utf-8'),
                             (',').join([str(self.NWORDS[w]) for w in ws]),
                             target.encode('utf-8'),
-                            self.NWORDS[target])
+                            self.NWORDS[target]), 'red')
+                else:
+                    print termcolor.colored(target, 'green')
         return dict(bad=bad, n=n, bias=bias, perc=int(100. - 100.*bad/n),
                     unknown=unknown, secs=int(time.clock()-start))
 
@@ -111,6 +122,7 @@ if __name__ == "__main__":
     from spellchecker import *
     sp = spellchecker()
     sp.train('words.txt')
+    #sp.printDict()
     word = 'առաջչն'.decode('utf-8')
     printUs(sp.correct(word))
     '''

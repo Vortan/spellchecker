@@ -47,24 +47,6 @@ def removeProper(text):
     proper_word = re.compile(pattern, re.UNICODE)
     return re.sub(proper_word, ' ', text)
 
-def makeDict(features):
-    '''
-    Make frequency dictionary
-    '''
-    model = collections.defaultdict(lambda: 1)
-    for f in features:
-      if f != None:
-          model[f] += 1
-    return model
-
-def printDict(dict):
-    '''
-    Sort and print unicode dictionary
-    '''
-    s_list = sorted(dict.items(), key=operator.itemgetter(1))
-    for k,v in s_list:
-        print '%7d\t%s' % (v, k.encode('utf-8'))
-
 if __name__ == "__main__":
     # Get directory
     if len(sys.argv) == 3:
@@ -96,6 +78,9 @@ if __name__ == "__main__":
         text = text.lower()
         words += getWords(text)
         f.close()
-    NWORDS = makeDict(words)
-    printDict(NWORDS)
+
+    # output words
+    for word in words:
+        print word.encode('utf-8')
+
     sys.stderr.write("\ndone\n")

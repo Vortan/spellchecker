@@ -12,7 +12,7 @@ if __name__ == "__main__":
         m2 = int(sys.argv[6])
     else:
         print "Usage: python test.py <dictionary> <test_json> <k> <m0> <m1> <m2>"
-        print "Example: python test.py ../str/words.txt ./tests/test1.json 3 1000 100 1"
+        print "Example: python test.py ../src/words.txt ./tests/test1.json 3 1000 100 1"
         sys.exit()
 
     # Initalize and train spellchecker
