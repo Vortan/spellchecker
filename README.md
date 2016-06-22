@@ -1,9 +1,11 @@
 ## Usage
 
 ``` bash
+pip install epub
+
 cd src/
 # produce dictionary (make sure you have a corpus directory)
-python collector.py .../corpus/ > words.txt
+python collector.py .../corpus/ txt,html,epub > words.txt
 # train and use spellchecker
 python
 >>> from spellchecker import *
