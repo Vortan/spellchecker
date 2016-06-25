@@ -4,7 +4,7 @@
 Armenian spellchecker based on http://norvig.com/spell-correct.html
 '''
 
-import re, collections, unicodedata, codecs, operator, os, time, heapq, termcolor
+import re, collections, unicodedata, codecs, operator, os, time, heapq, termcolor, sys
 
 ''' Helpers '''
 
@@ -36,13 +36,34 @@ class spellchecker:
                          u'\u0585', u'\u0586', u'\u0587']
         self.NWORDS = collections.defaultdict(lambda: 1)
 
-    def printDict(self):
+    def printDict(self, seperator):
         '''
-        Sort and print unicode dictionary
+        Print dictionary of words sorted by string in format [word][seperator][frequency]
         '''
-        s_list = sorted(self.NWORDS.items(), key=operator.itemgetter(1))
+        s_list = sorted(self.NWORDS.items(), key=operator.itemgetter(0))
         for k,v in s_list:
-            print '%7d\t%s' % (v, k.encode('utf-8'))
+            print '%s%s%d' % (k.encode('utf-8'), seperator, v)
+
+    def printLetters(self, seperator):
+        '''
+        Print dictionary of letters sorted by frequency in format [word][seperator][frequency]
+        '''
+        letters = collections.defaultdict(lambda: 1)
+        total = len(self.NWORDS)
+        for i, word in enumerate(self.NWORDS.keys()):
+            for c in word:
+                letters[c] += 1
+        c_list = sorted(letters.items(), key=operator.itemgetter(1))
+        for k,v in c_list:
+            print '%s/%d' % (k.encode('utf-8'), seperator, v)
+
+    def printWords(self):
+        '''
+        Sort and print words
+        '''
+        s_list = sorted(self.NWORDS.items(), key=operator.itemgetter(0))
+        for k,v in s_list:
+            print k.encode('utf-8')
 
     def train(self, dict_file):
         # Read in words and their counts
@@ -122,7 +143,6 @@ if __name__ == "__main__":
     from spellchecker import *
     sp = spellchecker()
     sp.train('words.txt')
-    #sp.printDict()
     word = 'առաջչն'.decode('utf-8')
     printUs(sp.correct(word))
     '''
