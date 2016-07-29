@@ -18,7 +18,7 @@ if __name__ == "__main__":
     # Initalize and train spellchecker
     print "Initializing spellchecker..."
     sp = spellchecker()
-    sp.train(dictionary)
+    sp.trainDict(dictionary)
 
     # Run tests
     print "Running tests..."

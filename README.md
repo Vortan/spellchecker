@@ -1,16 +1,11 @@
 ## Usage
 
 ``` bash
-pip install epub
-
-cd src/
-# produce dictionary (make sure you have a corpus directory)
-python collector.py .../corpus/ txt,html,epub > words.txt
-# train and use spellchecker
-python
+$ cd src/
+$ python
 >>> from spellchecker import *
 >>> sp = spellchecker()
->>> sp.train('words.txt')
+>>> sp.trainDict('../db/dict.txt')
 >>> word = 'առաջչն'.decode('utf-8')
 >>> printUs(sp.correct(word))
 ```
@@ -18,8 +13,8 @@ python
 ## Test
 
 ``` bash
-cd test/
-python test.py ../src/words.txt ./tests/rubina.json 3 1000 100 1
+$ cd test/
+$ python test.py ../db/dict.txt ./tests/rubina.json 3 1000 100 1
 ```
 
 ## Armenian spelling
@@ -41,15 +36,3 @@ Rubina Nazaryan's "Մայրենի Բոլորի Համար" considers these lette
 * Ն - Մ
 * Զ - Ս
 * Ժ - Շ
-
-
-## Credits
-
-Thanks to:
-* Vahakn
-* Ani
-* Ani
-* Gohar
-* Neli
-
-For helping in the development of the project.

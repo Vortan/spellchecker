@@ -64,14 +64,18 @@ def outputWords(words):
         print word.encode('utf-8')
 
 def processTxtFile(filename):
-    f = codecs.open(filename, encoding='utf-8')
-    f.seek(0)
-    text = f.read()
-    text = removeProper(text)
-    text = removePunc(text)
-    text = text.lower()
-    txt_words = getWords(text)
-    f.close()
+    txt_words = []
+    try:
+        f = codecs.open(filename, encoding='utf-8')
+        f.seek(0)
+        text = f.read()
+        text = removeProper(text)
+        text = removePunc(text)
+        text = text.lower()
+        txt_words = getWords(text)
+        f.close()
+    except (UnicodeDecodeError, OSError, IOError) as e:
+        pass
     return txt_words
 
 def processEpubFile(filename):
