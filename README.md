@@ -7,7 +7,7 @@ $ python
 >>> sp = spellchecker()
 >>> sp.trainDict('../db/dict.txt')
 >>> word = 'առաջչն'.decode('utf-8')
->>> printUs(sp.correct(word))
+>>> printUs(sp.correct(word, 3))
 ```
 
 ## Test

@@ -108,7 +108,7 @@ class spellchecker:
     def correct(self, word, k=1, m0=1, m1=1, m2=1):
         '''
         word: mispelled word
-        n:    number of corrections returned
+        k:    number of corrections returned
         m0:   weight of edit0 distance
         m1:   weight of edit1 distance
         m2:   weight of edit2 distance
@@ -156,5 +156,5 @@ if __name__ == "__main__":
     sp = spellchecker()
     sp.trainDict('../db/dict.txt')
     word = 'առաջչն'.decode('utf-8')
-    printUs(sp.correct(word))
+    printUs(sp.correct(word, 3))
     '''
