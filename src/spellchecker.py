@@ -66,6 +66,7 @@ class spellchecker:
                          u'\u0581', u'\u0582', u'\u0583', u'\u0584',
                          u'\u0585', u'\u0586', u'\u0587']
         self.NWORDS = collections.defaultdict(lambda: 1)
+        self.wordcount = 0.0
 
     def train(self, word_file):
         # Read in words and count
@@ -85,6 +86,7 @@ class spellchecker:
             if line:
                 word, count = line.strip().split()
                 self.NWORDS[word] = int(count)
+                self.wordcount += int(count)
         f.close()
 
     def edits1(self, word):
@@ -119,6 +121,12 @@ class spellchecker:
         candidates = edit0 | edit1 | edit2
         return [getFirst(x) for x in heapq.nlargest(k, candidates, key=getSecond)]
 
+    def isCorrect(self, word):
+        threshold = 0.01
+        if self.NWORDS[word]/self.wordcount > threshold:
+            return True
+        return False
+
     def addFreq(self, word, m=1):
         if word in self.NWORDS:
             return (word, self.NWORDS[word]*m)
@@ -131,6 +139,8 @@ class spellchecker:
             for wrong in wrongs.split():
                 n += 1
                 ws = self.correct(wrong, k, m0, m1, m2)
+                if self.isCorrect(target):
+                    ws = [target]
                 if target not in ws:
                     bad += 1
                     unknown += (target not in self.NWORDS)
@@ -150,11 +160,20 @@ class spellchecker:
 ''' Main '''
 
 if __name__ == "__main__":
-    pass
-    '''
+    print "Starting..."
     from spellchecker import *
     sp = spellchecker()
     sp.trainDict('../db/dict.txt')
-    word = 'առաջչն'.decode('utf-8')
-    printUs(sp.correct(word, 3))
-    '''
+    while True:
+        try:
+            word = raw_input('> ')
+            word = word.decode('utf-8')
+            if sp.isCorrect(word):
+                print '*'
+            else:
+                printUs(sp.correct(word, 3))
+        except KeyboardInterrupt:
+            try:
+                sys.exit(0)
+            except SystemExit:
+                os._exit(0)
