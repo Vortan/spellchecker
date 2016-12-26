@@ -1,3 +1,4 @@
-src/*.txt
 .DS_STORE
 *.pyc
+db/misc
+temp
