@@ -6,89 +6,182 @@ Armenian spellchecker based on http://norvig.com/spell-correct.html
 
 import re, collections, unicodedata, codecs, operator, os, time, heapq, termcolor, sys, pickle
 
-''' Helpers '''
+''' Constants '''
 
-def printUs(words):
-    print (',').join(words)
+# Minimum frequency for word to be considered correct
+# TODO: should be input (with default)
+THRESHOLD = 1e-06
 
-def getSecond(x):
-    if x and len(x) >= 2:
-        return x[1]
+# Weights
+# TODO: elaborate + should also be input 
+MG = 0.95
+M1 = 0.04
+M2 = 0.01
 
-def getFirst(x):
-    if x and len(x) >= 1:
-        return x[0]
+# Armenian unicode  alphabet
+ALPHABET = [u'\u0561', u'\u0562', u'\u0563', u'\u0564',
+            u'\u0565', u'\u0566', u'\u0567', u'\u0568',
+            u'\u0569', u'\u056A', u'\u056B', u'\u056C',
+            u'\u056D', u'\u056E', u'\u056F', u'\u0570',
+            u'\u0571', u'\u0572', u'\u0573', u'\u0574',
+            u'\u0575', u'\u0576', u'\u0577', u'\u0578',
+            u'\u0579', u'\u057A', u'\u057B', u'\u057C',
+            u'\u057D', u'\u057E', u'\u057F', u'\u0580',
+            u'\u0581', u'\u0582', u'\u0583', u'\u0584',
+            u'\u0585', u'\u0586', u'\u0587']
 
-''' Utility '''
+# Groupings of letters that are often mistaken for one another
+''' Դ - Տ - Թ '''
+d  = u'\u0564'  #դ
+t  = u'\u057f'  #տ
+tt = u'\u0569'  #թ
+group_d = [d, tt, t]
 
-def printDict(self, seperator):
-    '''
-    Print dictionary of words sorted by string in format [word][seperator][frequency]
-    '''
-    s_list = sorted(self.NWORDS.items(), key=operator.itemgetter(0))
-    for k,v in s_list:
-        print '%s%s%d' % (k.encode('utf-8'), seperator, v)
+''' Գ - Կ - Ք '''
+g  = u'\u0563'  #գ
+k  = u'\u056f'  #կ
+kk = u'\u0584'  #ք
+group_g = [g, k, kk]
 
-def printLetters(self, seperator):
-    '''
-    Print dictionary of letters sorted by frequency in format [word][seperator][frequency]
-    '''
-    letters = collections.defaultdict(lambda: 1)
-    total = len(self.NWORDS)
-    for i, word in enumerate(self.NWORDS.keys()):
-        for c in word:
-            letters[c] += 1
-    c_list = sorted(letters.items(), key=operator.itemgetter(1))
-    for k,v in c_list:
-        print '%s/%d' % (k.encode('utf-8'), seperator, v)
+''' Բ - Պ - Փ '''
+b  = u'\u0562'  #բ
+p  = u'\u057a'  #պ
+pp = u'\u0583'  #փ
+group_b = [b, p, pp]
 
-def printWords(self):
-    '''
-    Sort and print words
-    '''
-    s_list = sorted(self.NWORDS.items(), key=operator.itemgetter(0))
-    for k,v in s_list:
-        print k.encode('utf-8')
+''' Ձ - Ծ - Ց '''
+dz = u'\u0571'  #ձ
+c  = u'\u056e'  #ծ
+ts = u'\u0581'  #ց
+group_c = [dz, c, ts]
+
+''' Ջ - Ճ - Չ '''
+j  = u'\u057b'  #ջ
+jj = u'\u0573'  #ճ
+ch = u'\u0579'  #չ
+group_j = [j, jj, ch]
+
+''' Ղ - Խ '''
+gh = u'\u0572'  #ղ
+kh = u'\u056d'  #խ
+group_gh = [gh, kh]
+
+''' Ր - Ռ '''
+r  = u'\u0580'  #ր
+rr = u'\u057c'  #ռ
+group_r = [r, rr]
+
+''' Է - Ե '''
+e  = u'\u0567'  #է
+ye = u'\u0565'  #ե
+group_e = [e, ye]
+
+''' Օ - Ո '''
+o  = u'\u0585'  #օ
+vo = u'\u0578'  #ո
+group_o = [o, vo]
+
+GROUPS = [group_d, group_g, group_b,
+          group_c, group_j, group_gh,
+          group_r, group_e, group_o]
+
+''' Trainer '''
+
+def train(freq_filename, corr_filename=None):
+    """
+    Creates dictionaries out of word list files
+    Returns
+        freq_dict   word -> frequency probability
+        corr_dict   word -> is correct bool
+    """
+    freq_dict = collections.defaultdict(lambda: 0.0)
+    corr_dict = collections.defaultdict(bool)
+
+    freq_file = codecs.open(freq_filename, encoding='utf-8')
+    freq_file.seek(0)
+    for line in freq_file:
+        if line:
+            word, freq = line.strip().split()
+            freq_dict[word] = float(freq)
+
+    freq_file.close()
+
+    if corr_filename:
+        corr_file = codecs.open(corr_filename, encoding='utf-8')
+        corr_file.seek(0)
+        for line in corr_file:
+            if line:
+                word = line.strip()
+                corr_dict[word] = True
+        corr_file.close()
+
+    return freq_dict, corr_dict
 
 ''' Spellchecker '''
 
 class spellchecker:
-    def __init__(self):
-        self.armenian = re.compile(ur'[\u0531-\u0556\u0561-\u0587]+', re.UNICODE)
-        self.alphabet = [u'\u0561', u'\u0562', u'\u0563', u'\u0564',
-                         u'\u0565', u'\u0566', u'\u0567', u'\u0568',
-                         u'\u0569', u'\u056A', u'\u056B', u'\u056C',
-                         u'\u056D', u'\u056E', u'\u056F', u'\u0570',
-                         u'\u0571', u'\u0572', u'\u0573', u'\u0574',
-                         u'\u0575', u'\u0576', u'\u0577', u'\u0578',
-                         u'\u0579', u'\u057A', u'\u057B', u'\u057C',
-                         u'\u057D', u'\u057E', u'\u057F', u'\u0580',
-                         u'\u0581', u'\u0582', u'\u0583', u'\u0584',
-                         u'\u0585', u'\u0586', u'\u0587']
-        self.NWORDS = collections.defaultdict(lambda: 1)
-        self.wordcount = 0.0
+    def __init__(
+        self,
+        fwords,
+        cwords,
+        alphabet=ALPHABET,
+        threshold=THRESHOLD,
+        m1=M1,
+        m2=M2,
+        groups=GROUPS,
+        mg=MG,
+    ):
+        """ 
+        fwords      dict of word -> frequency
+        cwords      dict of word -> is correct
+        alphabet    unicode array of letters
+        threshold   words with freq greater than
+                     this are considered correct
+        m1          weight of edit distance 1
+        m2          weight of edit distance 2
+        groups      array of arrays of letters that
+                     are often mistaken for one another
+        mg          weight of group replacements
+        """
+        self.fwords = fwords
+        self.cwords = cwords
+        self.alphabet = alphabet
+        self.threshold = threshold
+        self.m1 = m1
+        self.m2 = m2
+        self.groups = groups
+        self.mg = mg
 
-    def train(self, word_file):
-        # Read in words and count
-        f = codecs.open(word_file, encoding='utf-8')
-        f.seek(0)
-        for line in f:
-            if line:
-                word = line.strip()
-                self.NWORDS[word] += 1
-        f.close()
+    def isCorrect(self, word):
+        if self.cwords[word]:
+            return True
+        if self.fwords[word] > self.threshold:
+            return True
+        return False
+    
+    def correct(self, word, k=1):
+        '''
+        word    word
+        k       # of corrections
+        '''
 
-    def trainDict(self, dict_file):
-        # Read in dictionary
-        f = codecs.open(dict_file, encoding='utf-8')
-        f.seek(0)
-        for line in f:
-            if line:
-                word, count = line.strip().split()
-                self.NWORDS[word] = int(count)
-                self.wordcount += int(count)
-        f.close()
+        if self.isCorrect(word):
+            return [word]
 
+        candidates = {}
+        def consider(w, m):
+            score = self.fwords[w] * m
+            if w not in candidates or score > candidates[w]:
+                candidates[w] = score
+
+        for w in self.known(self.edits1(word)): consider(w, self.m1)
+        for w in self.known(self.edits2(word)): consider(w, self.m2)
+        for w in self.known(self.editsG(word)): consider(w, self.mg)
+
+        return [x for x in heapq.nlargest(k , candidates, key=lambda x: candidates[x])]
+
+    def known(self, words): return set(w for w in words if w in self.fwords)
+    
     def edits1(self, word):
         splits     = [(word[:i], word[i:]) for i in range(len(word) + 1)]
         deletes    = [a + b[1:] for a, b in splits if b]
@@ -96,84 +189,25 @@ class spellchecker:
         replaces   = [a + c + b[1:] for a, b in splits for c in self.alphabet if b]
         inserts    = [a + c + b     for a, b in splits for c in self.alphabet]
         return set(deletes + transposes + replaces + inserts)
+    
+    def edits2(self, word):
+        return set(e2 for e1 in self.edits1(word)
+                        for e2 in self.edits1(e1) if e2 in  self.fwords)
+   
+    def editsG(self, word):
+        def find(s, ch):
+            return [i for i, ltr in enumerate(s) if ltr == ch]
 
-    def known_edits2(self, word):
-        return set(e2 for e1 in self.edits1(word) for e2 in self.edits1(e1) if e2 in self.NWORDS)
+        edits = set()
+        for pair in self.groups:
+            for letter in pair:
+                indices = find(word, letter)
+                if indices:
+                    without = pair[:]
+                    without.remove(letter)
+                    for i in indices:
+                        for w in without:
+                            edits.add(word[:i] + w + word[i+1:])
 
-    def known(self, words): return set(w for w in words if w in self.NWORDS)
+        return edits
 
-    def correctSimple(self, word, n=1):
-        #word = word.decode('utf-8');
-        candidates = self.known([word]) | self.known(self.edits1(word)) | self.known_edits2(word)
-        return heapq.nlargest(n, candidates, key=self.NWORDS.get)
-
-    def correct(self, word, k=1, m0=1, m1=1, m2=1):
-        '''
-        word: mispelled word
-        k:    number of corrections returned
-        m0:   weight of edit0 distance
-        m1:   weight of edit1 distance
-        m2:   weight of edit2 distance
-        '''
-        edit0 = set(filter(None, [self.addFreq(word, m0)]))
-        edit1 = set(filter(None, [self.addFreq(w, m1) for w in self.known(self.edits1(word))]))
-        edit2 = set(filter(None, [self.addFreq(w, m2) for w in self.known_edits2(word)]))
-        candidates = edit0 | edit1 | edit2
-        return [getFirst(x) for x in heapq.nlargest(k, candidates, key=getSecond)]
-
-    def isCorrect(self, word):
-        threshold = 0.01
-        if self.NWORDS[word]/self.wordcount > threshold:
-            return True
-        return False
-
-    def addFreq(self, word, m=1):
-        if word in self.NWORDS:
-            return (word, self.NWORDS[word]*m)
-
-    def spelltest(self, tests, k=1, m0=1, m1=1, m2=1, bias=None, verbose=True):
-        n, bad, unknown, start = 0, 0, 0, time.clock()
-        if bias:
-            for target in tests: self.NWORDS[target] += bias
-        for target,wrongs in tests.items():
-            for wrong in wrongs.split():
-                n += 1
-                ws = self.correct(wrong, k, m0, m1, m2)
-                if self.isCorrect(target):
-                    ws = [target]
-                if target not in ws:
-                    bad += 1
-                    unknown += (target not in self.NWORDS)
-                    if verbose:
-                        print termcolor.colored(
-                            '%s => %s (%s); expected %s (%d)' % (
-                            wrong.encode('utf-8'),
-                            (',').join(ws).encode('utf-8'),
-                            (',').join([str(self.NWORDS[w]) for w in ws]),
-                            target.encode('utf-8'),
-                            self.NWORDS[target]), 'red')
-                else:
-                    print termcolor.colored(target, 'green')
-        return dict(bad=bad, n=n, bias=bias, perc=int(100. - 100.*bad/n),
-                    unknown=unknown, secs=int(time.clock()-start))
-
-''' Main '''
-
-if __name__ == "__main__":
-    print "Starting..."
-    from spellchecker import *
-    sp = spellchecker()
-    sp.trainDict('../db/dict.txt')
-    while True:
-        try:
-            word = raw_input('> ')
-            word = word.decode('utf-8')
-            if sp.isCorrect(word):
-                print '*'
-            else:
-                printUs(sp.correct(word, 3))
-        except KeyboardInterrupt:
-            try:
-                sys.exit(0)
-            except SystemExit:
-                os._exit(0)

@@ -2,19 +2,19 @@
 
 ``` bash
 $ cd src/
-$ python
->>> from spellchecker import *
->>> sp = spellchecker()
->>> sp.trainDict('../db/dict.txt')
->>> word = 'առաջչն'.decode('utf-8')
->>> printUs(sp.correct(word, 3))
+$ python demo.py
+Training...
+Initializing spellchecker...
+Բարեւ
+> անուշաթիռ
+անուշադիր անուշադի անուշաթիռ
 ```
 
 ## Test
 
 ``` bash
 $ cd test/
-$ python test.py ../db/dict.txt ./tests/rubina.json 3 1000 100 1
+$ python test.py tests/rubina.json ../db/freq_dict.txt ../db/corr_dict.txt --v
 ```
 
 ## Armenian spelling
