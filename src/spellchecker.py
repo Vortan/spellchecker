@@ -9,14 +9,14 @@ import re, collections, unicodedata, codecs, operator, os, time, heapq, termcolo
 ''' Constants '''
 
 # Minimum frequency for word to be considered correct
-# TODO: should be input (with default)
-THRESHOLD = 1e-06
+THRESHOLD = 1e-06   # optimized
 
 # Weights
-# TODO: elaborate + should also be input 
-MG = 0.95
-M1 = 0.04
-M2 = 0.01
+# TODO: find training data and optimize these weights
+MG = 0.95   # group
+M0 = 0.04   # word itself
+M1 = 0.009  # edit distance 1
+M2 = 0.001  # edit distance 2
 
 # Armenian unicode  alphabet
 ALPHABET = [u'\u0561', u'\u0562', u'\u0563', u'\u0564',
@@ -126,6 +126,7 @@ class spellchecker:
         cwords,
         alphabet=ALPHABET,
         threshold=THRESHOLD,
+        m0=M0,
         m1=M1,
         m2=M2,
         groups=GROUPS,
@@ -137,6 +138,7 @@ class spellchecker:
         alphabet    unicode array of letters
         threshold   words with freq greater than
                      this are considered correct
+        m0          weight of edit distance 0
         m1          weight of edit distance 1
         m2          weight of edit distance 2
         groups      array of arrays of letters that
@@ -147,6 +149,7 @@ class spellchecker:
         self.cwords = cwords
         self.alphabet = alphabet
         self.threshold = threshold
+        self.m0 = m0
         self.m1 = m1
         self.m2 = m2
         self.groups = groups
@@ -174,6 +177,8 @@ class spellchecker:
             if w not in candidates or score > candidates[w]:
                 candidates[w] = score
 
+        # Consider all transformations as candidates
+        consider(word, self.m0)
         for w in self.known(self.edits1(word)): consider(w, self.m1)
         for w in self.known(self.edits2(word)): consider(w, self.m2)
         for w in self.known(self.editsG(word)): consider(w, self.mg)

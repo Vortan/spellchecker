@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # This Python file uses the following encoding: utf-8
 from spellchecker import *
-print "Training..."
+print "Reading dictionary..."
 freq_dict, corr_dict = train('../db/freq_dict.txt', '../db/corr_dict.txt') 
 print "Initializing spellchecker..."
 sp = spellchecker(fwords=freq_dict, cwords=corr_dict)
