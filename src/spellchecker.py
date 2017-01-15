@@ -4,7 +4,7 @@
 Armenian spellchecker based on http://norvig.com/spell-correct.html
 '''
 
-import re, collections, unicodedata, codecs, operator, os, time, heapq, termcolor, sys, pickle
+import re, collections, unicodedata, codecs, operator, os, time, heapq, termcolor, sys, pickle, sqlite3
 
 ''' Constants '''
 
@@ -94,7 +94,7 @@ def train(freq_filename, corr_filename=None):
         freq_dict   word -> frequency probability
         corr_dict   word -> is correct bool
     """
-    freq_dict = collections.defaultdict(lambda: 0.0)
+    freq_dict = collections.defaultdict(float)
     corr_dict = collections.defaultdict(bool)
 
     freq_file = codecs.open(freq_filename, encoding='utf-8')
@@ -155,10 +155,19 @@ class spellchecker:
         self.groups = groups
         self.mg = mg
 
+    def isKnown(self, word):
+        return word in self.fwords
+
+    def freq(self, word):
+        return self.fwords[word]
+
+    def corr(self, word):
+        return self.cwords[word]
+ 
     def isCorrect(self, word):
-        if self.cwords[word]:
+        if self.corr(word):
             return True
-        if self.fwords[word] > self.threshold:
+        if self.freq(word) > self.threshold: 
             return True
         return False
     
@@ -173,7 +182,7 @@ class spellchecker:
 
         candidates = {}
         def consider(w, m):
-            score = self.fwords[w] * m
+            score = self.freq(w) * m
             if w not in candidates or score > candidates[w]:
                 candidates[w] = score
 
@@ -184,8 +193,8 @@ class spellchecker:
         for w in self.known(self.editsG(word)): consider(w, self.mg)
 
         return [x for x in heapq.nlargest(k , candidates, key=lambda x: candidates[x])]
-
-    def known(self, words): return set(w for w in words if w in self.fwords)
+   
+    def known(self, words): return set(w for w in words if self.isKnown(w))
     
     def edits1(self, word):
         splits     = [(word[:i], word[i:]) for i in range(len(word) + 1)]
@@ -197,7 +206,7 @@ class spellchecker:
     
     def edits2(self, word):
         return set(e2 for e1 in self.edits1(word)
-                        for e2 in self.edits1(e1) if e2 in  self.fwords)
+                        for e2 in self.edits1(e1) if self.isKnown(e2))
    
     def editsG(self, word):
         def find(s, ch):
@@ -216,3 +225,50 @@ class spellchecker:
 
         return edits
 
+
+class spellchecker_sqlite(spellchecker):
+    def __init__(
+        self,
+        words_db,
+        alphabet=ALPHABET,
+        threshold=THRESHOLD,
+        m0=M0,
+        m1=M1,
+        m2=M2,
+        groups=GROUPS,
+        mg=MG,  
+    ):
+        # init db 
+        conn = sqlite3.connect(words_db)
+        self.cursor = conn.cursor()
+        self.alphabet = alphabet
+        self.threshold = threshold
+        self.m0 = m0
+        self.m1 = m1
+        self.m2 = m2
+        self.groups = groups
+        self.mg = mg
+
+    def isKnown(self, word):
+        word = word.encode('utf-8')
+        self.cursor.execute('SELECT ({coi}) FROM {tn} WHERE {cn}="{val}"'.\
+                    format(coi='frequency', tn='freq', cn='word', val=word))
+        result = self.cursor.fetchone()
+        freq_val = result[0] if result else 0 
+        return True if freq_val else False
+
+    def freq(self, word):
+        word = word.encode('utf-8')
+        self.cursor.execute('SELECT ({coi}) FROM {tn} WHERE {cn}="{val}"'.\
+                    format(coi='frequency', tn='freq', cn='word', val=word))
+        result = self.cursor.fetchone()
+        freq_val = result[0] if result else 0 
+        return float(freq_val)
+
+    def corr(self, word):
+        word = word.encode('utf-8')
+        self.cursor.execute('SELECT ({coi}) FROM {tn} WHERE {cn}="{val}"'.\
+                    format(coi='frequency', tn='freq', cn='word', val=word))
+        corr_val = self.cursor.fetchone()
+        return True if corr_val else False
+ 
