@@ -4,7 +4,7 @@
 Armenian spellchecker based on http://norvig.com/spell-correct.html
 '''
 
-import re, collections, unicodedata, codecs, operator, os, time, heapq, termcolor, sys, pickle, sqlite3
+import re, collections, unicodedata, codecs, operator, os, time, heapq, sys, pickle, sqlite3
 
 ''' Constants '''
 
